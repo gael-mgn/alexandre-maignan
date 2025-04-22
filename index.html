@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alexandre Maignan - Artiste Compositeur</title>
+
+
+
+    <meta name="robots" content="noindex">
+
+
+    <script src="js/main.js"></script>
+
+    <link href="style/style.css" rel="stylesheet">
+    <link href="style/invisu.css" rel="stylesheet"> 
+
+</head>
+<body>
+        <nav class="navbar3" id="navbar3">
+        <a href="#" class="logo">Alexandre M.</a>
+        <div class="hamburger" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <ul class="menu">
+            <li><button class="nav-btn" onclick="window.location.href='articles/realisations/realisations.html';">Prods.</button></li>
+            <li><button class="nav-btn" onclick="window.location.href='articles/devis/devis.html';">Contact</button></li>
+        </ul>
+    </nav>
+
+    <script>
+         // Affichage de la barre de navigation après un certain scroll
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar3');
+            if (window.scrollY >= window.innerHeight) {
+                navbar.classList.add('show');
+            } else {
+                closeMenu();
+                navbar.classList.remove('show');
+            }
+        });
+    </script>
+    <!-- Vue panoramique -->
+    <div id="viewer">
+        <img src="img/img.jpg" class="img_overlay">
+        <style type="text/css">
+            .img_overlay {
+                object-fit: cover;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+        <div id="fadeOverlay"></div>
+        <div id="filter"></div>
+        <!-- Écran d'accueil -->
+        <div class="intro">
+            <h1 id="animated-title">Alexandre Maignan - Artiste Compositeur</h1>
+            <h2></h2>
+            <div class="game-selection">
+                <button class="btn-gaming btn" data-game="pro" onclick="smoothScrollTo('pro', 1000)">Dernières Prods</button>
+                <!--<button class="btn-gaming btn" data-game="culture" onclick="smoothScrollTo('culture', 1000)">Patrimoine & Culture</button>-->
+                <button class="btn-gaming btn" data-game="immo" onclick="smoothScrollTo('immo', 1000)">Me contacter</button>
+                <div class="game-description hidden" id="game-description"></div>
+            </div>
+            <nav class="contact">
+                <button class="btn-gaming" onclick="window.location.href='articles/realisations/realisations.html';">Prods.</button>
+                <button class="btn-gaming" onclick="window.location.href='articles/devis/devis.html';">Contact</button>
+            </nav>
+
+            <style type="text/css">
+                a {
+                    color: white;
+                }
+            </style>
+
+            <p id="infos"></p>
+            
+
+            <style type="text/css">
+                #infos {
+                    position: absolute;
+                    bottom: 10px;
+                    left: 10px;
+                    color: grey;
+                }
+                .contact {
+                    position: absolute;
+                    top: 15px;
+                    right: 30px;
+                }
+                .contact .btn-gaming {
+                    margin-left: 5px;
+                    font-size: 15px;
+                    padding: 15px;
+                    padding-bottom: 10px;
+                    padding-top: 10px;
+                }
+                @media (max-width: 768px) {
+                    .game-selection {
+                        display: none;
+                    }
+                    .contact {
+                        display: none;
+                    }
+                }
+            </style>
+
+            <div class="scroll-btn" onclick="smoothScrollTo('introduction', 1000)"></div>
+        </div>
+
+        <style>
+            #viewer { width: 100vw; height: 100vh; position: relative; }
+            #overlay {
+                position: absolute;
+            }
+            /* Overlay noir pour le fondu */
+            #fadeOverlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: black;
+                opacity: 0;
+                transition: opacity 0.5s ease-in-out;
+                pointer-events: none;
+            }
+            #filter {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: black;
+                opacity: 0.6;
+            }
+        </style>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const buttons = document.querySelectorAll(".btn");
+                const descriptionBox = document.getElementById("game-description");
+
+                const gameDescriptions = {
+                    "culture": "Valorisez musées et sites historiques grâce à l’immersion virtuelle.",
+                    "immo": " Vous souhaitez collaborarer avec moi, aors contactez moi !",
+                    "pro": "Écoutez toutes mes dernières productions et collaborations."
+                };
+
+                buttons.forEach(button => {
+                    button.addEventListener("mouseenter", (event) => {
+                        const gameKey = event.target.getAttribute("data-game");
+                        descriptionBox.textContent = gameDescriptions[gameKey];
+                        descriptionBox.style.left = `${event.target.offsetLeft + event.target.offsetWidth / 2 - 125}px`;
+                        descriptionBox.classList.add("visible");
+                    });
+
+                    button.addEventListener("mouseleave", () => {
+                        descriptionBox.classList.remove("visible");
+                    });
+                });
+            });
+        </script>
+    </div>
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js';
+
+        let scene, camera, renderer, sphere, textureLoader;
+        let speed = 0.001; // Vitesse de rotation
+        let images = ["https://gael-mgn.github.io/invisu/img/1.webp",  "https://gael-mgn.github.io/invisu/img/2.webp",
+        "https://gael-mgn.github.io/invisu/img/3.webp"]; // Liste des images 360°
+        let descriptions = ["Ecole des Ingénieurs de la Ville de Paris (EIVP) - Paris", "Visite virtuelle d'un studio", "Airbus A380 - Aeroscopia, Blagnac"];
+        let textures = {}; // Stockage des textures préchargées
+        let currentImageIndex = 0;
+        let autoChangeInterval;
+        const fadeOverlay = document.getElementById("fadeOverlay");
+
+        function init() {
+            const container = document.getElementById("viewer");
+
+            // Get the dimensions using getBoundingClientRect
+            const rect = container.getBoundingClientRect();
+
+            // Création de la scène
+            scene = new THREE.Scene();
+
+            // Création de la caméra
+            camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 0.1, 1000);
+            camera.position.set(0, 0, 0.1);
+
+            // Récupérer la taille du conteneur et ajuster le rendu en conséquence
+            function resizeRendererToDisplaySize(renderer) {
+                const container = document.getElementById("viewer");
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            }
+
+            // Rendu WebGL
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(rect.width, rect.height);
+            container.appendChild(renderer.domElement);
+
+            // Chargement des textures au démarrage
+            textureLoader = new THREE.TextureLoader();
+            preloadTextures(images, () => {
+                // Création de la sphère une fois les textures chargées
+                const geometry = new THREE.SphereGeometry(500, 60, 40);
+                const material = new THREE.MeshBasicMaterial({
+                    map: textures[images[currentImageIndex]], 
+                    side: THREE.BackSide
+                });
+                sphere = new THREE.Mesh(geometry, material);
+                scene.add(sphere);
+
+                startAutoChange(); // Lancement du changement auto
+                animate();
+            });
+
+            // Redimensionnement dynamique
+            window.addEventListener('resize', () => resizeRendererToDisplaySize(renderer));
+            // Changer l'image avec la touche espace
+            /*window.addEventListener("keydown", (event) => {
+                if (event.code === "Space") {
+                    resetAutoChange(); // Réinitialise le compteur
+                    changeImage();
+                }
+            });*/
+
+            document.getElementById("infos").textContent = descriptions[currentImageIndex];
+        }
+
+        // 🔹 Précharge toutes les textures avant d'afficher la scène
+        function preloadTextures(imageList, callback) {
+            let loadedCount = 0;
+            imageList.forEach(image => {
+                textureLoader.load(image, (texture) => {
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    textures[image] = texture; // Stocke la texture préchargée
+                    loadedCount++;
+                    if (loadedCount === imageList.length) callback(); // Une fois toutes chargées, callback
+                });
+            });
+        }
+
+        // 🔹 Change l'image avec une transition en fondu noir
+        function changeImage() {
+            currentImageIndex = (currentImageIndex + 1) % images.length; // Boucle sur les images
+            
+            document.getElementById("infos").textContent = descriptions[currentImageIndex];
+            const newTexture = textures[images[currentImageIndex]];
+
+            fadeOverlay.style.opacity = 1; // Début du fondu noir
+
+            setTimeout(() => {
+                sphere.material.map = newTexture;
+                sphere.material.needsUpdate = true;
+                fadeOverlay.style.opacity = 0; // Fin du fondu noir
+            }, 500);
+        }
+
+        // 🔹 Démarre le changement d’image automatique
+        function startAutoChange() {
+            autoChangeInterval = setInterval(changeImage, 8000); // Change toutes les 3s
+        }
+
+        // 🔹 Réinitialise le changement auto (utile si l’utilisateur change manuellement)
+        function resetAutoChange() {
+            clearInterval(autoChangeInterval); // Stoppe le timer
+            startAutoChange(); // Redémarre le cycle
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            sphere.rotation.y += speed; // Rotation automatique
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+
+
+    <div class="container" id="introduction">
+        <div class="content">
+            <h2>Alexandre Maignan - Bitmaker</h2>
+
+            <p>Bienvenue sur mon univers musical. Moi, c’est Alexandre Maignan. Compositeur autodidacte, passionné par les sons, les textures, et les émotions qu’ils peuvent faire naître. Si tu cherches des vibes uniques, des ambiances sur-mesure ou simplement une bonne instru pour ton prochain projet, tu es au bon endroit.</p>
+            <br>
+
+            <p>"Tout a commencé il y a 8 ans. J’ai découvert FL Studio presque par hasard, et très vite, j’y ai trouvé un terrain de jeu infini. J’ai appris seul, en testant, en ratant, puis en recommençant — jusqu’à pouvoir produire mes propres instrus..."</p>
+
+            <button class="btn-gaming" data-game="contact" onclick="window.location.href='articles/about/about.html';">Découvrir mon travail</button>
+
+            <div class="scroll-btn" onclick="smoothScrollTo('services', 1000)"></div>
+        </div>
+    </div>
+
+    <div class="container" id="services">
+        <div class="content">
+            <h2>Mon univers musical</h2>
+            <p>
+                "Je ne me limite pas à un seul style. J’aime passer du reggae au rap, composer des musiques d’ambiance pour des podcasts ou poser des mélodies chill qui t’emmènent ailleurs. Mon son, c’est un mélange d’influences urbaines, d’expériences personnelles et de vibes venues de Cergy, là où tout a commencé."
+            </p>
+
+            <style>
+                .content .btn-gaming {
+                    margin-top: 40px;
+                }
+            </style>
+
+        <div class="scroll-btn" onclick="smoothScrollTo('pro', 1000)"></div>
+        </div>
+    </div>
+
+    <div class="container" id="services">
+        <div class="content">
+            <h2>Ce que je te propose</h2>
+            
+            <ul>
+                <li>Beats sur mesure pour artistes et créateurs</li>
+                <li>Musiques d’ambiance pour podcasts, vidéos, ou expos</li>
+                <li>Collaboration pour tout projet créatif où le son joue un rôle clé</li>
+                <li>Et parfois… des petits voyages sonores juste pour le plaisir de créer"</li>
+            </ul>
+
+
+            <button class="btn-gaming" onclick="window.location.href='articles/devis/devis.html';">Contact</button>
+
+            <style>
+                .content .btn-gaming {
+                    margin-top: 40px;
+                }
+            </style>
+
+        <div class="scroll-btn" onclick="smoothScrollTo('pro', 1000)"></div>
+        </div>
+    </div>
+
+    <style type="text/css">
+        #services {
+            background: #222;
+        }
+    </style>
+
+
+    <div id="pro">
+        <br><br>
+        <div class="news-card hidden">
+            <div class="news-header">
+                <!--<img src="image.jpeg" alt="Image du jeu">-->
+                <h2>Fraîchement composées</h2>
+            </div>
+
+            <div class="news-content">
+                <h3>A propos de mes prods</h3>
+                <p>"Un peu de rap, un peu de reggae, beaucoup de passion. Voici mes dernières prods, composées au fil de mes inspirations. Tu veux poser dessus ? Tu sais où me trouver."</p>
+
+                <h3>Dernières Réalisations</h3>
+                
+<style type="text/css">
+    iframe {
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+</style>
+
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/5zF5jX034V4QkG9yetmDCw?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/5zF5jX034V4QkG9yetmDCw?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/5zF5jX034V4QkG9yetmDCw?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/episode/5zF5jX034V4QkG9yetmDCw?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+            </div>
+        </div>
+    </div>
+    <div id="culture">
+        <br><br>
+        <div class="news-card hidden">
+            <div class="news-header">
+                <!--<img src="image.jpeg" alt="Image du jeu">-->
+                <h2>Me contacter</h2>
+            </div>
+
+            <div class="news-content">
+                <p>Si tu veux qu’on collabore, ou simplement discuter musique, je suis toujours ouvert. Je crois que les meilleures créations naissent des rencontres.</p>
+
+                <ul>
+                    <li><strong>Mail: </strong><a href="mailto:alex...fr">alex.maignan@dfdfg.fr</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="footer-container">
+            <!-- Section Informations -->
+            <div class="footer-nav">
+                <h3>InVisu 360</h3>
+                <ul>
+                <li>Découvrez autrement, Explorez sans limites.</li>
+                <li><strong>Email :</strong> contact@invisu.fr</li>
+                <li><strong>Téléphone :</strong> +33 6 74 41 36 37</li>
+            </div>
+            
+            <!-- Section Navigation -->
+            <div class="footer-nav">
+                <h3>Navigation</h3>
+                <ul>
+                    <li><a href="#">Accueil</a></li>
+                    <li><a href="#services">Nos services</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Section Navigation -->
+            <div class="footer-nav">
+                <h3>Nos domaines d'expertise</h3>
+                <ul>
+                    <li><a href="#pro">Espaces Pros & Education</a></li>
+                    <li><a href="#culture">Patrimoine & Culture</a></li>
+                    <li><a href="#immo">Immobilier & Locations</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Section Mentions légales et Copyright -->
+        <div class="footer-bottom">
+            <p><a href="articles/terms-of-use/terms-of-use.html">Mentions légales</a> | <a href="articles/private-policy/private-policy.html">Politique de confidentialité</a></p>
+            <p>&copy; 2025 InVisu 360. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
